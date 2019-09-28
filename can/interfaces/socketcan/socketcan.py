@@ -5,7 +5,7 @@ along some internal methods.
 At the end of the file the usage of the internal methods is shown.
 """
 
-from typing import Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import logging
 import ctypes
@@ -302,7 +302,7 @@ def _add_flags_to_can_id(message: Message) -> int:
 
 
 class CyclicSendTask(
-    LimitedDurationCyclicSendTaskABC, ModifiableCyclicTaskABC, RestartableCyclicTaskABC
+    ModifiableCyclicTaskABC, LimitedDurationCyclicSendTaskABC, RestartableCyclicTaskABC
 ):
     """
     A SocketCAN cyclic send task supports:
@@ -319,21 +319,25 @@ class CyclicSendTask(
         messages: Union[Sequence[Message], Message],
         period: float,
         duration: Optional[float] = None,
+        modifier_callback: Callable = None,
     ):
         """
         :param bcm_socket: An open BCM socket on the desired CAN channel.
-        :param messages:
+        :param Union[Sequence[can.Message], can.Message] messages:
             The messages to be sent periodically.
-        :param period:
+        :param float period:
             The rate in seconds at which to send the messages.
-        :param duration:
+        :param float duration:
             Approximate duration in seconds to send the messages for.
+        :param Callable modifier_callback:
+            Optional callback function which is called for each message in a
+            cyclic_send task before sending it.
         """
         # The following are assigned by LimitedDurationCyclicSendTaskABC:
         #   - self.messages
         #   - self.period
         #   - self.duration
-        super().__init__(messages, period, duration)
+        super().__init__(messages, period, duration, modifier_callback)
 
         self.bcm_socket = bcm_socket
         self._tx_setup(self.messages)
@@ -705,18 +709,22 @@ class SocketcanBus(BusABC):
         msgs: Union[Sequence[Message], Message],
         period: float,
         duration: Optional[float] = None,
+        modifier_callback: Callable = None,
     ) -> CyclicSendTask:
         """Start sending messages at a given period on this bus.
 
         The kernel's Broadcast Manager SocketCAN API will be used.
 
-        :param messages:
+        :param Union[Sequence[can.Message], can.Message] messages:
             The messages to be sent periodically
-        :param period:
+        :param float period:
             The rate in seconds at which to send the messages.
-        :param duration:
+        :param float duration:
             Approximate duration in seconds to continue sending messages. If
             no duration is provided, the task will continue indefinitely.
+        :param Callable modifier_callback:
+            Optional callback function which is called for each message in a
+            cyclic_send task before sending it.
 
         :return:
             A started task instance. This can be used to modify the data,
