@@ -302,7 +302,7 @@ def _add_flags_to_can_id(message: Message) -> int:
 
 
 class CyclicSendTask(
-    ModifiableCyclicTaskABC, LimitedDurationCyclicSendTaskABC, RestartableCyclicTaskABC
+    LimitedDurationCyclicSendTaskABC, ModifiableCyclicTaskABC, RestartableCyclicTaskABC
 ):
     """
     A SocketCAN cyclic send task supports:
@@ -337,7 +337,7 @@ class CyclicSendTask(
         #   - self.messages
         #   - self.period
         #   - self.duration
-        super().__init__(messages, period, duration, modifier_callback)
+        super().__init__(messages, period, duration)
 
         self.bcm_socket = bcm_socket
         self._tx_setup(self.messages)
