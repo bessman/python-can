@@ -2,7 +2,7 @@
 Contains the ABC bus implementation and its documentation.
 """
 
-from typing import Callable, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import cast, Callable, Iterator, List, Optional, Sequence, Tuple, Union
 
 import can.typechecking
 
